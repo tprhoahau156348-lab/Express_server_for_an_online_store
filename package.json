@@ -1,0 +1,25 @@
+{
+  "name": "express_server_for_an_online_store",
+  "version": "1.0.0",
+  "description": "Backend המדמה חנות אונליין קטנה, נכתב ב-Node.js ו-Express. המערכת מנהלת מוצרים, עגלות קניות של לקוחות ותהליכי תשלום (Checkout) מבוססי קבצי JSON מקומיים.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tprhoahau156348-lab/Express_server_for_an_online_store.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tprhoahau156348-lab/Express_server_for_an_online_store/issues"
+  },
+  "homepage": "https://github.com/tprhoahau156348-lab/Express_server_for_an_online_store#readme",
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "Type": "module"
+}
