@@ -156,6 +156,39 @@ app.post('/cart/items', async (req, res) => {
     }
 });
 
+
+app.delete('/cart/items/:productId', async (req, res) => {
+    try {
+
+        const { productId } = req.params;
+        const { customerId } = req.body;
+
+        if (!customerId) {
+            return res.status(400).json({ error: 'customerId is required' });
+        }
+
+        let customers = await readData('customers.json');
+        const customerIndex = customers.findIndex(c => c.customerId === customerId);
+
+        if (customerIndex === -1) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+
+        const productIdNum = parseInt(productId, 10);
+
+
+        customers[customerIndex].cart = customers[customerIndex].cart.filter(
+            item => item.productId !== productIdNum
+        );
+
+        await writeData('customers.json', customers);
+        res.status(200).json({ success: true, data: customers[customerIndex].cart });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
