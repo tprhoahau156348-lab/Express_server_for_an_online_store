@@ -189,6 +189,27 @@ app.delete('/cart/items/:productId', async (req, res) => {
     }
 });
 
+app.get('/account/balance', async (req, res) => {
+    try {
+        const { customerId } = req.query;
+
+        if (!customerId) {
+            return res.status(400).json({ error: 'customerId is required' });
+        }
+
+        let customers = await readData('customers.json');
+        const customer = customers.find(c => c.customerId === customerId);
+
+        if (!customer) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        res.status(200).json({ balance: customer.balance });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
