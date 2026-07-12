@@ -94,6 +94,68 @@ app.get('/cart', async (req, res) => {
     }
 });
 
+
+app.post('/cart/items', async (req, res) => {
+    try {
+        const { customerId, productId, quantity } = req.body;
+
+
+        if (!customerId || !productId || quantity === undefined) {
+            return res.status(400).json({ error: 'customerId, productId, and quantity are required' });
+        }
+
+
+        if (typeof quantity !== 'number' || quantity <= 0 || !Number.isInteger(quantity)) {
+            return res.status(400).json({ error: 'Quantity must be a whole number greater than 0' });
+        }
+
+        let products = await readData('products.json');
+        const product = products.find(p => p.id === productId);
+
+        if (!product) {
+            return res.status(404).json({ error: 'Product not found' });
+        }
+
+        if (product.stock < quantity) {
+            return res.status(400).json({ error: 'Not enough stock available' });
+        }
+
+        let customers = await readData('customers.json');
+        let customer = customers.find(c => c.customerId === customerId);
+
+
+        if (!customer) {
+            customer = {
+                customerId,
+                balance: STARTING_BALANCE,
+                cart: [],
+                createdAt: new Date().toISOString()
+            };
+            customers.push(customer);
+        }
+
+
+        const existingCartItem = customer.cart.find(item => item.productId === productId);
+        if (existingCartItem) {
+
+            if (existingCartItem.quantity + quantity > product.stock) {
+                 return res.status(400).json({ error: 'Total quantity in cart exceeds available stock' });
+            }
+            existingCartItem.quantity += quantity;
+        } else {
+
+            customer.cart.push({ productId, quantity });
+        }
+
+
+        await writeData('customers.json', customers);
+
+        res.status(200).json({ success: true, data: customer.cart });
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
