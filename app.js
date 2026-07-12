@@ -210,6 +210,89 @@ app.get('/account/balance', async (req, res) => {
     }
 });
 
+
+app.post('/orders/checkout', async (req, res) => {
+    try {
+        const { customerId } = req.body;
+
+        if (!customerId) {
+            return res.status(400).json({ error: 'customerId is required' });
+        }
+
+
+        let customers = await readData('customers.json');
+        let products = await readData('products.json');
+        let orders = await readData('orders.json');
+
+        const customerIndex = customers.findIndex(c => c.customerId === customerId);
+        
+        if (customerIndex === -1) {
+            return res.status(404).json({ error: 'Customer not found' });
+        }
+
+        const customer = customers[customerIndex];
+
+
+        if (!customer.cart || customer.cart.length === 0) {
+            return res.status(400).json({ error: 'Cart is empty' });
+        }
+
+        let totalOrderPrice = 0;
+
+
+        for (const item of customer.cart) {
+            const product = products.find(p => p.id === item.productId);
+            
+            if (!product) {
+                return res.status(400).json({ error: `Product with ID ${item.productId} no longer exists` });
+            }
+            
+            if (product.stock < item.quantity) {
+                return res.status(400).json({ error: `Not enough stock for product: ${product.name}` });
+            }
+            
+            totalOrderPrice += product.price * item.quantity;
+        }
+
+
+        if (customer.balance < totalOrderPrice) {
+            return res.status(400).json({ error: 'Insufficient balance to complete the purchase' });
+        }
+
+
+        for (const item of customer.cart) {
+            const productIndex = products.findIndex(p => p.id === item.productId);
+            products[productIndex].stock -= item.quantity;
+        }
+
+
+        customer.balance -= totalOrderPrice;
+        const purchasedItems = [...customer.cart];
+        customer.cart = [];
+
+
+        const newOrder = {
+            id: Date.now().toString(), 
+            customerId,
+            items: purchasedItems,
+            total: totalOrderPrice,
+            createdAt: new Date().toISOString()
+        };
+        
+        orders.push(newOrder);
+
+
+        await writeData('products.json', products);
+        await writeData('customers.json', customers);
+        await writeData('orders.json', orders);
+
+        res.status(200).json({ success: true, order: newOrder });
+
+    } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
 app.listen(PORT, () => {
     console.log(`Server is running on http://localhost:${PORT}`);
 });
